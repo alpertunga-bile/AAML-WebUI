@@ -163,3 +163,5 @@ cython_debug/
 outputs/
 third-party/
 datasets/
+venvLog.txt
+paths.json
