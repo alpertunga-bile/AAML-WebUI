@@ -14,6 +14,7 @@ from gradio import (
     Slider,
 )
 from gradio.themes import Monochrome
+from folder_paths import models_folder, input_folder
 from os import listdir
 from os.path import isfile
 
@@ -26,7 +27,7 @@ with Blocks(title="AAML WebUI", theme=Monochrome()) as application:
             interactive=True,
         )
         model_dropdown = Dropdown(
-            choices=[f for f in listdir("models/") if isfile(f)],
+            choices=[f for f in listdir(models_folder) if isfile(f)],
             label="Models",
             interactive=True,
         )
@@ -41,7 +42,10 @@ with Blocks(title="AAML WebUI", theme=Monochrome()) as application:
         train_button = Button(value="Train")
     with Tab("Test"):
         with Row():
-            test_image = Image(image_mode="RGBA", source="upload", type="pil")
+            test_image = Gallery(
+                value=[img for img in listdir(input_folder) if isfile(img)],
+                label="Used Input Images",
+            )
             output_image = Gallery(label="Just DL Model Output Image")
             upscale_output_image = Gallery(label="With Upscale Method Output Image")
         with Row():
@@ -54,7 +58,7 @@ with Blocks(title="AAML WebUI", theme=Monochrome()) as application:
                     "RealESRNet_x4plus",
                     "RealESRGAN_x4plus_anime_6B",
                     "RealESRGAN_x2plus",
-                    "realesr-general-x4v3",
+                    "realesr-general-wdn-x4v3",
                 ],
                 value="RealESRGAN_x4plus",
                 label="Models",

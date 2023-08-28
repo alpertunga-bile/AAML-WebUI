@@ -1,24 +1,18 @@
 from VenvManager import VenvManager
 
-from os.path import exists
-from os import mkdir
-
-
-def CheckFolder(foldername: str) -> None:
-    if exists(foldername) is False:
-        mkdir(foldername)
+from folder_paths import *
 
 
 if __name__ == "__main__":
     venv_manager = VenvManager()
-    realesrgan_repokey = "realesrgan"
 
-    CheckFolder("datasets")
-    CheckFolder("outputs")
-    CheckFolder("third-party")
-    CheckFolder("images")
-    CheckFolder("models")
-    CheckFolder("third-party")
+    CheckFolder(dataset_folder)
+    CheckFolder(input_folder)
+    CheckFolder(outputs_folder)
+    CheckFolder(third_party_folder)
+    CheckFolder(images_dataset_folder)
+    CheckFolder(models_folder)
+    CheckFolder(upscalers_folder)
 
     venv_manager.InstallWRequirements()
 
