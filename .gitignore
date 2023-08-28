@@ -163,6 +163,8 @@ cython_debug/
 outputs/
 third-party/
 datasets/
+images/
+models/
 venvLog.txt
 paths.json
 requirements.txt
