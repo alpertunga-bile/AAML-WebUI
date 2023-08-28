@@ -9,15 +9,16 @@ from json import load, dumps
 
 # For coloring log outputs
 class CustomFormatter(Formatter):
-    grey = '\x1b[38;21m'
-    blue = '\x1b[38;5;39m'
-    yellow = '\x1b[38;5;226m'
-    red = '\x1b[38;5;196m'
-    bold_red = '\x1b[31;1m'
-    reset = '\x1b[0m'
+    grey = "\x1b[38;21m"
+    blue = "\x1b[38;5;39m"
+    yellow = "\x1b[38;5;226m"
+    red = "\x1b[38;5;196m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
 
     def __init__(self, fmt):
         from logging import DEBUG, WARNING, ERROR, CRITICAL
+
         super().__init__()
         self.fmt = fmt
         self.FORMATS = {
@@ -25,7 +26,7 @@ class CustomFormatter(Formatter):
             INFO: self.blue + self.fmt + self.reset,
             WARNING: self.yellow + self.fmt + self.reset,
             ERROR: self.red + self.fmt + self.reset,
-            CRITICAL: self.bold_red + self.fmt + self.reset
+            CRITICAL: self.bold_red + self.fmt + self.reset,
         }
 
     def format(self, record):
@@ -33,14 +34,15 @@ class CustomFormatter(Formatter):
         formatter = Formatter(logFormat)
         return formatter.format(record)
 
-class VenvManager:
-    opsys : str = ""
-    venvName : str = ""
-    currentDir : str = ""
-    paths : dict = {}
-    logger : Logger
 
-    def __init__(self, envName : str ="venv", loggerLevel=INFO):
+class VenvManager:
+    opsys: str = ""
+    venvName: str = ""
+    currentDir: str = ""
+    paths: dict = {}
+    logger: Logger
+
+    def __init__(self, envName: str = "venv", loggerLevel=INFO):
         self.venvName = envName
         self.opsys = system()
         self.paths = {}
@@ -62,7 +64,11 @@ class VenvManager:
             self.logger.info(f"Using {envName} virtual environment")
         else:
             self.logger.info(f"Creating {envName}")
-            self.CheckCommand(self.RunCommand("python -m venv venv"), f"{envName} is created", "Cant create virtual environment")
+            self.CheckCommand(
+                self.RunCommand("python -m venv venv"),
+                f"{envName} is created",
+                "Cant create virtual environment",
+            )
 
     """
     Class functionalities
@@ -73,7 +79,7 @@ class VenvManager:
         self.logger.setLevel(loggerLevel)
         handler = StreamHandler(stdout)
         handler.setLevel(INFO)
-        logFormat = '[%(asctime)s] /_\ %(levelname)-8s /_\ %(message)s'
+        logFormat = "[%(asctime)s] /_\ %(levelname)-8s /_\ %(message)s"
         if self.opsys == "Windows":
             formatter = Formatter(logFormat)
         else:
@@ -93,9 +99,9 @@ class VenvManager:
             self.logger.error("Python is not exists")
             exit(1)
 
-    def SetPaths(self, envName : str) -> None:
+    def SetPaths(self, envName: str) -> None:
         if exists("paths.json"):
-            with open('paths.json', "r") as pathFile:
+            with open("paths.json", "r") as pathFile:
                 self.paths = load(pathFile)
         else:
             winPath = f"{envName}\\Scripts"
@@ -122,9 +128,13 @@ class VenvManager:
 
     def CreateRequirementsFile(self) -> None:
         command = f"{self.paths['pip']} freeze > requirements.txt"
-        self.CheckCommand(self.RunCommand(command), "requirements file is updated", "Cant create requirements file")
+        self.CheckCommand(
+            self.RunCommand(command),
+            "requirements file is updated",
+            "Cant create requirements file",
+        )
 
-    def CheckPackages(self, filename : str) -> tuple:
+    def CheckPackages(self, filename: str) -> tuple:
         self.logger.info("Checking Packages")
         command = f"{self.paths['pip']} freeze > temp_requirements.txt"
         self.RunCommand(command)
@@ -143,7 +153,7 @@ class VenvManager:
 
         return (notIncludedPackages, wantedPackages.issubset(envPackages))
 
-    def InstallWRequirements(self, filename : str="requirements.txt") -> None:
+    def InstallWRequirements(self, filename: str = "requirements.txt") -> None:
         needToDownload, isContains = self.CheckPackages(filename)
         if isContains:
             self.logger.info("Requirements are already installed")
@@ -160,9 +170,10 @@ class VenvManager:
     """
     Git Functions
     """
+
     def CheckGit(self) -> bool:
         streamdata, isExist = self.RunCommand("git --version")
-        
+
         if isExist:
             self.logger.info(f"Using {streamdata}")
         else:
@@ -170,13 +181,15 @@ class VenvManager:
 
         return isExist
 
-    def GetRepositoryName(self, repoLink : str) -> str:
+    def GetRepositoryName(self, repoLink: str) -> str:
         regexPattern = "([^/]+)\\.git$"
         pattern = compile(regexPattern)
         matcher = pattern.search(repoLink)
         return matcher.group(1)
 
-    def CloneRepository(self, repoLink : str, repoKey : str, parentFolder : str="") -> None:
+    def CloneRepository(
+        self, repoLink: str, repoKey: str, parentFolder: str = ""
+    ) -> None:
         if self.CheckGit() is False:
             self.logger.error("Cannot detect git")
             return
@@ -198,11 +211,11 @@ class VenvManager:
             command = f"git clone --recursive {repoLink}"
         else:
             command = f"cd {parentFolder} && git clone --recursive {repoLink} && cd {self.currentDir}"
-        
+
         self.logger.info(f"Cloning {repoLink}")
         self.RunCommand(command)
 
-    def UpdateRepository(self, repoKey : str) -> None:
+    def UpdateRepository(self, repoKey: str) -> None:
         if self.CheckGit() is False:
             self.logger.error("Cannot detect git")
             return
@@ -214,7 +227,7 @@ class VenvManager:
             return
 
         command = f"cd {self.paths[realRepoKey]} && git pull && cd {self.currentDir}"
-        
+
         self.logger.info(f"Updating {repoKey}")
         self.RunCommand(command)
 
@@ -226,10 +239,10 @@ class VenvManager:
         for key in self.paths.keys():
             if "-repo" not in key:
                 continue
-            
+
             self.UpdateRepository(key[:-5])
 
-    def RunScriptInsideRepository(self, repoKey : str, repoCommand : str) -> None:
+    def RunScriptInsideRepository(self, repoKey: str, repoCommand: str) -> None:
         realRepoKey = repoKey + "-repo"
 
         if realRepoKey not in self.paths.keys():
@@ -245,7 +258,9 @@ class VenvManager:
         self.logger.info(f"Running {repoCommand}")
         self.RunCommand(command)
 
-    def InstallRequirementsFromRepository(self, repoKey : str, file : str = "requirements.txt") -> None:
+    def InstallRequirementsFromRepository(
+        self, repoKey: str, file: str = "requirements.txt"
+    ) -> None:
         realRepoKey = repoKey + "-repo"
 
         if realRepoKey not in self.paths.keys():
@@ -262,14 +277,16 @@ class VenvManager:
         for key in self.paths.keys():
             if "-repo" not in key:
                 continue
-            
+
             self.InstallRequirementsFromRepository(key[:-5])
 
     """
     Running Functions
     """
 
-    def CheckCommand(self, terminalData : tuple, successMsg : str, failureMsg : str) -> None:
+    def CheckCommand(
+        self, terminalData: tuple, successMsg: str, failureMsg: str
+    ) -> None:
         _, isSuccess = terminalData
 
         if isSuccess:
@@ -279,8 +296,10 @@ class VenvManager:
             self.logger.error("ERROR OCCURED!!! Check venvLog file")
             exit(1)
 
-    def RunScript(self, filename : str, args : str="") -> None:
-        self.logger.info(f"Running {filename}.py with [{', '.join(args.split(' '))}] args")
+    def RunScript(self, filename: str, args: str = "") -> None:
+        self.logger.info(
+            f"Running {filename}.py with [{', '.join(args.split(' '))}] args"
+        )
         command = f"{self.paths['python']} {filename}.py {args}"
 
         process = run(command, shell=True, check=True)
@@ -290,11 +309,11 @@ class VenvManager:
         else:
             self.logger.error(f"Cant run {filename}.py file")
 
-    def RunCommand(self, command : str, isCheck : bool = True) -> tuple:
+    def RunCommand(self, command: str, isCheck: bool = True) -> tuple:
         process = run(command, shell=True, check=isCheck, capture_output=True)
-        
+
         streamdata = process.stdout
-        streamdata = streamdata.decode('UTF-8')
+        streamdata = streamdata.decode("UTF-8")
         streamdata = streamdata.strip()
 
         with open("venvLog.txt", "a") as file:
