@@ -1,12 +1,11 @@
 from gradio import (
     Blocks,
     Button,
+    Checkbox,
     Code,
     Dropdown,
     File,
     Gallery,
-    Image,
-    Label,
     Plot,
     Row,
     Tab,
@@ -14,9 +13,11 @@ from gradio import (
     Slider,
 )
 from gradio.themes import Monochrome
-from folder_paths import models_folder, input_folder
-from os import listdir
-from os.path import isfile
+from folder_paths import (
+    get_model_script_paths,
+    get_model_state_dict_paths,
+    get_test_input_paths,
+)
 
 with Blocks(title="AAML WebUI", theme=Monochrome()) as application:
     with Tab("Train"):
@@ -26,11 +27,17 @@ with Blocks(title="AAML WebUI", theme=Monochrome()) as application:
             file_types=[".pickle"],
             interactive=True,
         )
-        model_dropdown = Dropdown(
-            choices=[f for f in listdir(models_folder) if isfile(f)],
-            label="Models",
-            interactive=True,
-        )
+        with Row():
+            train_model_script_dropdown = Dropdown(
+                choices=get_model_script_paths(),
+                label="Model Script",
+                interactive=True,
+            )
+            train_model_state_dict_dropdown = Dropdown(
+                choices=get_model_state_dict_paths(),
+                label="Model State Dicts",
+                interactive=True,
+            )
         with Row():
             epoch_slider = Slider(
                 1, 10000, value=20, step=1, label="Epochs", interactive=True
@@ -43,15 +50,23 @@ with Blocks(title="AAML WebUI", theme=Monochrome()) as application:
     with Tab("Test"):
         with Row():
             test_image = Gallery(
-                value=[img for img in listdir(input_folder) if isfile(img)],
+                value=get_test_input_paths(),
                 label="Used Input Images",
             )
             output_image = Gallery(label="Just DL Model Output Image")
             upscale_output_image = Gallery(label="With Upscale Method Output Image")
         with Row():
-            tile_size_slider = Slider(
-                0, 1024, value=192, step=1, label="Tile Size", interactive=True
+            test_model_script_dropdown = Dropdown(
+                choices=get_model_script_paths(),
+                label="Model Script",
+                interactive=True,
             )
+            test_model_state_dict_dropdown = Dropdown(
+                choices=get_model_state_dict_paths(),
+                label="Model State Dicts",
+                interactive=True,
+            )
+        with Row():
             upscale_model_dropdown = Dropdown(
                 choices=[
                     "RealESRGAN_x4plus",
@@ -63,6 +78,16 @@ with Blocks(title="AAML WebUI", theme=Monochrome()) as application:
                 value="RealESRGAN_x4plus",
                 label="Models",
                 interactive=True,
+            )
+            tile_size_slider = Slider(
+                0, 1024, value=192, step=1, label="Tile Size", interactive=True
+            )
+            scale_factor_slider = Slider(
+                1, 4, value=2, step=0.1, label="Scale", interactive=True
+            )
+            fp32_checkbox = Checkbox(value=True, label="FP32", interactive=True)
+            face_enhance_checkbox = Checkbox(
+                value=False, label="Face Enhance", interactive=True
             )
         test_button = Button(value="Run")
     with Tab("Model"):
